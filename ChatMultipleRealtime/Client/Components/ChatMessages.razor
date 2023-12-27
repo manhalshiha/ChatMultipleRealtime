@@ -1,0 +1,13 @@
+﻿@if(SelectedUser is null)
+{
+    <p>Please selecte user from connected users list, to start conversation</p>
+}
+else
+{
+    <h2>@SelectedUser.Name</h2>
+}
+
+@code {
+    [Parameter]
+    public UserDto? SelectedUser{ get; set; }
+}
