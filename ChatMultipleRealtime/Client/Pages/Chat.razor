@@ -59,7 +59,8 @@
     private HubConnection ConfigureHubConnection()
     {
         var hubConnection = new HubConnectionBuilder()
-                                .WithUrl(navigationManger.ToAbsoluteUri("/hubs/blazing-chat"))
+                                .WithUrl(navigationManger.ToAbsoluteUri("/hubs/blazing-chat"),
+                                options=>options.AccessTokenProvider=()=>Task.FromResult(AuthenticationState.Token))
                                 .Build();
         hubConnection.On<UserDto>(nameof(IBlazingChatHubClient.UserConnected), (userName) =>
         {

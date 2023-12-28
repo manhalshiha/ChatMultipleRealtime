@@ -26,4 +26,5 @@ Highlights and main ideas:
 04:07:36 test and correct code for create special chat with any user i want from users list 
 04:14:00 secure HubConnection Websocket with jwt authentication and authurization and test websocket working .
 
+test git
 

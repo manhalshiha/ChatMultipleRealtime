@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatMultipleRealtime.Shared
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3B0FB609-87FF-4D73-937A-EC436201BB75}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\..\learning_projects\BlazorChatSignalR\BlazorChatSignalR\.gitattributes = ..\..\..\learning_projects\BlazorChatSignalR\BlazorChatSignalR\.gitattributes
+		..\..\..\learning_projects\BlazorChatSignalR\BlazorChatSignalR\.gitignore = ..\..\..\learning_projects\BlazorChatSignalR\BlazorChatSignalR\.gitignore
 		Read me.txt = Read me.txt
 	EndProjectSection
 EndProject
