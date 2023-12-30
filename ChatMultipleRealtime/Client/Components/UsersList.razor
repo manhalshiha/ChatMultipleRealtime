@@ -3,7 +3,7 @@
 
 <h3>Users</h3>
 <ul class="list-group list-group-flush">
-    @if (_loading)
+    @if (Loading)
     {
         <li class="list-group-item">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"> </span>
@@ -14,41 +14,24 @@
     {
         foreach (var user in Users)
         {
-            <li class="list-group-item" style="cursor:pointer" @onclick="()=>HandleUserClick(user)">@user.Id - @user.Name</li>
+            <li class="list-group-item" style="cursor:pointer" @onclick="()=>HandleUserClick(user)">
+                @user.Id - @user.Name
+            <span class="badge rounded-pill bg-@(user.IsOnline?"success":"danger")">.</span>    
+            </li>
         }
     }
 
 </ul>
 @code {
-    [CascadingParameter(Name = "AuthenticationState")]
-    public AuthenticationState authenticationState { get; set; }
-    private bool _loading = false;
-    private IEnumerable<UserDto> Users { get; set; } = Enumerable.Empty<UserDto>();
+    
+    [Parameter]   
+    public bool Loading { get; set; }
+    [Parameter]
+    public ICollection<UserDto> Users { get; set; } = default;
     [Parameter]
     public EventCallback<UserDto> OnUserSelected { get; set; }
-    protected override async Task OnInitializedAsync()
-    {
-        if (!string.IsNullOrWhiteSpace(authenticationState.Token))
-        {
-            try
-            {
-                _loading = true;
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authenticationState.Token);
-                var usersList = await httpClient.GetFromJsonAsync<IEnumerable<UserDto>>("api/users", JsonConverter.JsonSerializerOptions);
-                if (usersList is not null)
-                    Users = usersList;
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                _loading = false;
-            }
-        }
-    }
+   
+    
     public async Task HandleUserClick(UserDto user)
     {
         await OnUserSelected.InvokeAsync(user);

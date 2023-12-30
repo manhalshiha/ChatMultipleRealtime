@@ -9,6 +9,6 @@ namespace ChatMultipleRealtime.Shared
 {
     public interface IBlazingChatHubServer
     {
-        Task ConnectUser(UserDto user);
+        Task SetUserOnline(UserDto user);
     }
 }

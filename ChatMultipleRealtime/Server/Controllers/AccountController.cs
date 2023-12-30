@@ -1,7 +1,10 @@
 ﻿using ChatMultipleRealtime.Server;
 using ChatMultipleRealtime.Server.Data;
 using ChatMultipleRealtime.Server.Data.Entities;
+using ChatMultipleRealtime.Server.Hubs;
+using ChatMultipleRealtime.Shared;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatMultipleRealtime.Server.Controllers
@@ -12,11 +15,13 @@ namespace ChatMultipleRealtime.Server.Controllers
     {
         private readonly ChatContext chatContext;
         private readonly TokenService tokenService;
+        private readonly IHubContext<ChatHub, IBlazingChatHubClient> hubContext;
 
-        public AccountController(ChatContext chatContext, TokenService tokenService)
+        public AccountController(ChatContext chatContext, TokenService tokenService,IHubContext<ChatHub,IBlazingChatHubClient> hubContext)
         {
             this.chatContext = chatContext;
             this.tokenService = tokenService;
+            this.hubContext = hubContext;
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto registerDto, CancellationToken cancellationToken)
@@ -37,6 +42,7 @@ namespace ChatMultipleRealtime.Server.Controllers
             };
             await chatContext.AddAsync(user, cancellationToken);
             await chatContext.SaveChangesAsync(cancellationToken);
+            await hubContext.Clients.All.UserConnected(new UserDto(user.Id, user.Name));
             return Ok(tokenService.GenerateToken(user));
         }
         [HttpPost("login")]

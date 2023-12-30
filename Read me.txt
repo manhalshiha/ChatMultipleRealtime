@@ -26,5 +26,9 @@ Highlights and main ideas:
 04:07:36 test and correct code for create special chat with any user i want from users list 
 04:14:00 secure HubConnection Websocket with jwt authentication and authurization and test websocket working .
 05:04:40 attach token with request through httpclient to get all user from api 
-test git
+05:30:00 send all registered users to all users except current user , and here i would register new user and then send message to all connected users to display new user.
+05:39:00 display online users status (red for who isn't online , green for who online )
+05:50:00 when user have logged in , must to see other users if their online or not .
+
+
 

@@ -7,7 +7,7 @@ namespace ChatMultipleRealtime.Server.Hubs
     [Authorize]
     public class ChatHub:Hub<IBlazingChatHubClient>,IBlazingChatHubServer
     {
-        private static readonly IDictionary<int,UserDto> connectedUsers = new Dictionary<int, UserDto>(); 
+        private static readonly IDictionary<int,UserDto> _onlineUsers = new Dictionary<int, UserDto>(); 
         public ChatHub() 
         {
              
@@ -17,13 +17,13 @@ namespace ChatMultipleRealtime.Server.Hubs
             return base.OnConnectedAsync();
             
         }
-        public async Task ConnectUser(UserDto user)
+        public async Task SetUserOnline(UserDto user)
         {
-            await Clients.Caller.UserConnectedList(connectedUsers.Values.Where(x=>x.Id!=user.Id));
-            if (!connectedUsers.ContainsKey(user.Id))
+            await Clients.Caller.OnlineUsersList(_onlineUsers.Values.Where(x=>x.Id!=user.Id));
+            if (!_onlineUsers.ContainsKey(user.Id))
             {
-                connectedUsers.Add(user.Id,user);
-                 await Clients.Others.UserConnected(user);
+                _onlineUsers.Add(user.Id,user);
+                 await Clients.Others.UserIsOnline(user.Id);
             } 
          }
     }
