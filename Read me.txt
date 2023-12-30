@@ -25,6 +25,6 @@ Highlights and main ideas:
 03:59:49 using INotifyPropertyChanged interface in AuthResponseDto.cs and event handler 
 04:07:36 test and correct code for create special chat with any user i want from users list 
 04:14:00 secure HubConnection Websocket with jwt authentication and authurization and test websocket working .
-
+05:04:40 attach token with request through httpclient to get all user from api 
 test git
 

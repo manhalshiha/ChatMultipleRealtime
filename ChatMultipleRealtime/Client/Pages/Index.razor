@@ -6,33 +6,53 @@
 
 <div class="containr">
     <div class="row">
-        <div class="col">
+        <div class="col-4">
         </div>
-        <div class="col">
-            <h2>Login to chatting</h2>
-            <hr />
-            <EditForm Model="LoginModel" OnValidSubmit="@LoginAsync">
-                <DataAnnotationsValidator />
-                @if (!string.IsNullOrWhiteSpace(errorMessage))
-                {
-                    <p class="text-danger">@errorMessage</p>
-                }
-                <div class="mb-3">
-                    <InputText @bind-Value="@LoginModel.Username" DisplayName="Username" class="form-control" placeholder="UserName" />
-                    <ValidationMessage For="()=>LoginModel.Username" />
-                </div>
-                <div class="mb-3">
-                    <InputText type="password" @bind-Value="@LoginModel.Password" DisplayName="Password" class="form-control" placeholder="password" />
-                    <ValidationMessage For="()=>LoginModel.Password" />
-                </div>
-                <div>
-                <button type="submit" class="btn btn-success float-start" @(isBusy?"disabled":"null")>Login</button>
-                    <NavLink href="register" class="btn btn-outline-primary float-end">Register</NavLink>
+        <div class="col-4">
+            <EditForm Model="LoginModel" OnValidSubmit="LoginAsync">
+                <div class="card br-0 mt-5">
+                    <div class="card-header bg-main br-0" >
+                        <h2 class="text-white mb-0"> Blazing Chat - Login </h2>
+                    </div>
+                    <div class="card-body">
+                        <DataAnnotationsValidator />
+                        @if (!string.IsNullOrWhiteSpace(errorMessage))
+                        {
+                            <p class="text-danger">@errorMessage</p>
+                        }
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <InputText @bind-Value="@LoginModel.Username" DisplayName="Username" class="form-control" placeholder="UserName" />
+                            <ValidationMessage For="()=>LoginModel.Username" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <InputText type="password" @bind-Value="@LoginModel.Password" DisplayName="Password" class="form-control" placeholder="password" />
+                            <ValidationMessage For="()=>LoginModel.Password" />
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                            <NavLink href="register" class="btn btn-outline-primary float-start">Register</NavLink>
+                            @if (isBusy)
+                            {
+                                <button class="btn btn-success float-end" type="button" disabled>
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"> </span>
+                                    Loading....
+                                </button>
+
+                            }
+                            else
+                            {
+
+                                <button type="submit" class="btn btn-success float-end">Login</button>
+                            }
+                            <div class="clearfix"></div>
+
+                    </div>
                 </div>
             </EditForm>
         </div>
-        <div class="col">
-        </div>
+        <div class="col-4"></div>
     </div>
 </div>
 
@@ -48,7 +68,7 @@
         {
             isBusy = true;
             errorMessage = null;
-            var response = await httpClient.PostAsJsonAsync <LoginDto>("api/account/login", LoginModel);
+            var response = await httpClient.PostAsJsonAsync<LoginDto>("api/account/login", LoginModel);
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
@@ -59,7 +79,7 @@
                 //NavigationManager.NavigateTo("/chat");
                 AuthenticationState.LoadState(authResult);
             }
-            else  
+            else
             {
                 string? errorContent = null;
                 errorContent = await response.Content.ReadAsStringAsync();
