@@ -1,13 +1,123 @@
-﻿@if(SelectedUser is null)
+﻿@inject HttpClient httpClient
+@using System.Net.Http.Headers
+@if (SelectedUser is null)
 {
-    <p>Please selecte user from connected users list, to start conversation</p>
+    <h2>Please select a user from connected users list ,to start a conversation</h2>
 }
 else
 {
-    <h2>@SelectedUser.Name</h2>
-}
 
+    <div class="flex-grow-1 d-flex flex-column">
+        <div class="header d-flex justify-content-between bg-main">
+            <h2 class="text-white">@SelectedUser.Name</h2>
+            <button class="btn btn-danger btn-sm" @onclick="HandleCancelClick">x</button>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="header d-flex justify-content-between bg-danger">
+                <span class="text-white">@errorMessage</span>
+                <button class="btn btn-danger btn-sm" @onclick="()=>errorMessage=null">x</button>
+            </div>
+        }
+        <div class="messages-list flex-grow-1">
+            <ul>
+
+                @foreach (var msg in messages)
+                {
+                    <li>@msg</li>
+                }
+            </ul>
+        </div>
+        <div class="message-input">
+            <EditForm Model="newMessage" OnValidSubmit="HandleSendMessageSubmit">
+                <div class="">
+                    <div class="input-group">
+                        <InputText class="form-control" placeholder="Enter message here..." @bind-Value="newMessage" />
+                        <button type="submit" class="btn btn-success">>></button>
+
+                    </div>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+}
 @code {
+    [CascadingParameter(Name = "AuthenticationState")]
+    public AuthenticationState AuthenticationState { get; set; }
     [Parameter]
-    public UserDto? SelectedUser{ get; set; }
+    public UserDto? SelectedUser { get; set; }
+    [Parameter] 
+    public EventCallback<bool> OnCancel { get; set; }
+    [Parameter]
+    public EventCallback<bool> OnIncomingMessageRecived { get; set; }
+    [Parameter]
+    public MessageDto? NewIncomingMessage { get; set; }
+    private string newMessage = "";
+    private string? errorMessage;
+    private int previousSelectedUserId=0;
+
+    public IList<MessageDto> messages = new List<MessageDto>();
+    protected override async Task OnParametersSetAsync()
+    {
+        if (NewIncomingMessage is not null)
+        {
+            messages.Add(NewIncomingMessage);
+            await OnIncomingMessageRecived.InvokeAsync();
+        }
+
+        if (SelectedUser is not null&&SelectedUser.Id!=previousSelectedUserId )
+        {
+            previousSelectedUserId = SelectedUser.Id;
+            await LoadMessagesAsync();
+        }
+        
+
+    }
+    
+    private async Task LoadMessagesAsync()
+    {
+            messages.Clear();
+        var allMessages = await GetClient().GetFromJsonAsync<IEnumerable< MessageDto>>($"api/messages/{SelectedUser.Id}", JsonConverter.JsonSerializerOptions);
+        if(allMessages?.Any()==true)
+        {
+            messages = allMessages.ToList();
+            errorMessage = null;
+        }
+        else
+        {
+            errorMessage = $"There is no messages between you and {SelectedUser.Name}";
+        }
+        
+    }
+    public async Task HandleCancelClick()
+    {
+        var isUserHasMessages = messages.Any();
+        var shouldRemoveFromChatList = !isUserHasMessages;
+        await OnCancel.InvokeAsync(shouldRemoveFromChatList);
+    }
+    private HttpClient GetClient()
+    {
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticationState.Token);
+        return httpClient;
+    }
+    private async Task HandleSendMessageSubmit()
+    {
+        if (!string.IsNullOrWhiteSpace(newMessage))
+        {
+            var sendMessageDto = new MessageSendDto(SelectedUser!.Id, newMessage);
+            var response = await GetClient().PostAsJsonAsync("api/messages", sendMessageDto, JsonConverter.JsonSerializerOptions);
+            if (response.IsSuccessStatusCode)
+            {
+                var messageDto = new MessageDto(SelectedUser!.Id, AuthenticationState.User.Id, newMessage);
+                messages.Add(messageDto);
+                newMessage = "";
+                errorMessage = null;
+            }
+            else
+            {
+                errorMessage = "Error sending message";
+            }
+        }
+    }
 }

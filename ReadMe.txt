@@ -29,6 +29,9 @@ Highlights and main ideas:
 05:30:00 send all registered users to all users except current user , and here i would register new user and then send message to all connected users to display new user.
 05:39:00 display online users status (red for who isn't online , green for who online )
 05:50:00 when user have logged in , must to see other users if their online or not .
-
-
+06:04:00 select user to begin chat with him
+06:21:00 close conversation with any user then remove it from chatsList 
+06:30:00 create form to write message and send it 
+06:37:30 Send message to sepecification user 
+07:27:00 creating history for every conversation 
 

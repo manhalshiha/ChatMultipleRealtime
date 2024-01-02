@@ -1,19 +1,19 @@
 ﻿<h3>Chats</h3>  
 <ul class="list-group list-group-flush">
-    @foreach (var user in Users)
+    @foreach (var chat in Chats)
     {
-    <li class="list-group-item" style="cursor:pointer" @onclick="()=>HandleUserClick(user)">@user.Name</li>
+    <li class="list-group-item @(chat.IsSelected?"bg-success text-white":"")" style="cursor:pointer" @onclick="()=>HandleUserClick(chat)">@chat.Name</li>
         
     }
     
 </ul>
 @code {
     [Parameter]
-    public IEnumerable<UserDto> Users { get; set; } = Enumerable.Empty<UserDto>();
+    public IEnumerable<UserDto> Chats { get; set; } = Enumerable.Empty<UserDto>();
     [Parameter]
     public EventCallback<UserDto> OnUserSelected{ get; set; }
-    public async Task HandleUserClick(UserDto user)
+    public async Task HandleUserClick(UserDto chat)
     {
-        await OnUserSelected.InvokeAsync(user);
+        await OnUserSelected.InvokeAsync(chat);
     }
 }

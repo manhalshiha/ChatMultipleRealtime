@@ -13,7 +13,9 @@ namespace ChatMultipleRealtime.Server.Data.Entities
         [Required,MaxLength(500)]
         public string Contetn { get; set; }
         public DateTime SentOn { get; set; }
+        [ForeignKey(nameof(Message.FromId))]
         public virtual User FromUser { get; set; }
+        [ForeignKey(nameof(Message.ToId))]
         public virtual User ToUser { get; set; }
     }    
 }

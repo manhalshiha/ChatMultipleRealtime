@@ -23,11 +23,17 @@
             <div class="row" style="flex:1;">
 
                 <div class="col-sm-2 col-3">
-                    <ChatsList OnUserSelected="OnUserSelected" />
+                    <ChatsList Chats="Chats" OnUserSelected="OnUserSelected" />
                 </div>
-                <div class="col-sm-8 col-6 d-flex justify-content-center align-items-center" style="background-color:#f4ecff">
-                    <ChatDetails SelectedUser="SelectedUser" />
+                
+                @* <div class="col-sm-8 col-6 d-flex justify-content-center align-items-center" style="background-color:#f4ecff"> *@
+                <div class="col-sm-8 col-6 d-flex px-0" style="background-color:#f4ecff">
+                    <ChatDetails OnCancel="HandleChatDetailsCancel" 
+                        NewIncomingMessage="@newIncomingMessage" 
+                        OnIncomingMessageRecived="()=>newIncomingMessage=null"
+                        SelectedUser="SelectedUser" />
                 </div>
+                
                 <div class="col-sm-2 col-3">
                     <UsersList Loading="_loadingUsers" Users="Users" OnUserSelected="OnUserSelected" />
                 </div>
@@ -42,7 +48,9 @@
     private HubConnection? hubConnection;
     private bool _loadingUsers = false;
     private UserDto? SelectedUser = null;
+    private MessageDto newIncomingMessage = null;
     public ICollection<UserDto> Users { get; set; } = new HashSet<UserDto>();
+    public ICollection<UserDto> Chats { get; set; } = new HashSet<UserDto>();
     protected override async void OnInitialized()
     {
         base.OnInitialized();
@@ -77,6 +85,30 @@
     private async Task OnUserSelected(UserDto user)
     {
         SelectedUser = user;
+        var selectedChatUser = Chats.FirstOrDefault(c => c.IsSelected);
+        if (selectedChatUser is not null)
+        {
+            selectedChatUser.IsSelected = false; 
+        }
+        var chatUser = Chats.FirstOrDefault((c => c.Id == user.Id));
+        if (chatUser is null)
+        {
+            user.IsSelected = true;
+            Chats.Add(user); 
+        }
+        else
+        {
+            chatUser.IsSelected = true;
+
+        }
+    }
+    private async Task HandleChatDetailsCancel(bool shouldRemoveFromChatList)
+    {
+        if (shouldRemoveFromChatList)
+        {
+            Chats.Remove(SelectedUser);
+        }
+        SelectedUser = null;
     }
     private HubConnection ConfigureHubConnection()
     {
@@ -108,6 +140,23 @@
                 user.IsOnline = true;
                 StateHasChanged();
             }
+        });
+        hubConnection.On<int, string>(nameof(IBlazingChatHubClient.MessageRecived), (fromUserId, message) =>
+        {
+            var fromUser = Chats.FirstOrDefault(u => u.Id == fromUserId);
+            if (!Chats.Any(c => c.Id == fromUserId)){
+                Chats.Prepend(fromUser);
+            }
+            else
+            {
+                if (SelectedUser?.Id == fromUserId)
+                {
+                    newIncomingMessage = new MessageDto(SelectedUser.Id, fromUserId, message);
+                    
+                }
+            }
+            StateHasChanged();
+
         });
         return hubConnection;
     }
