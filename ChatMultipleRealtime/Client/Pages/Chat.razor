@@ -50,7 +50,7 @@
     private UserDto? SelectedUser = null;
     private MessageDto newIncomingMessage = null;
     public ICollection<UserDto> Users { get; set; } = new HashSet<UserDto>();
-    public ICollection<UserDto> Chats { get; set; } = new HashSet<UserDto>();
+    public IList<UserDto> Chats { get; set; } = new List<UserDto>();
     protected override async void OnInitialized()
     {
         base.OnInitialized();
@@ -65,7 +65,13 @@
             hubConnection = ConfigureHubConnection();
             _loadingUsers = true;
             var userListTask = GetClient().GetFromJsonAsync<ICollection<UserDto>>("api/users", JsonConverter.JsonSerializerOptions);
+            var chatListTask = GetClient().GetFromJsonAsync<IList<UserDto>>("api/users/chats", JsonConverter.JsonSerializerOptions);
             await hubConnection.StartAsync();
+            var ChatsList = await chatListTask;
+            if (ChatsList is not null)
+            {
+                Chats = ChatsList;
+            }
             var UsersList = await userListTask;
             if (UsersList is not null)
             {
@@ -143,9 +149,10 @@
         });
         hubConnection.On<int, string>(nameof(IBlazingChatHubClient.MessageRecived), (fromUserId, message) =>
         {
-            var fromUser = Chats.FirstOrDefault(u => u.Id == fromUserId);
+            var fromUser = Users.FirstOrDefault(u => u.Id == fromUserId);
             if (!Chats.Any(c => c.Id == fromUserId)){
-                Chats.Prepend(fromUser);
+                Chats.Insert(0,fromUser!);
+                
             }
             else
             {

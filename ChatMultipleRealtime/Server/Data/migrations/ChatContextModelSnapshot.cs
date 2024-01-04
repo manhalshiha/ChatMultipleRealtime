@@ -50,7 +50,7 @@ namespace ChatMultipleRealtime.Server.data.migrations
 
                     b.HasIndex("ToId");
 
-                    b.ToTable("Message");
+                    b.ToTable("Message", (string)null);
                 });
 
             modelBuilder.Entity("ChatMultipleRealtime.Server.Data.Entities.User", b =>
@@ -83,7 +83,7 @@ namespace ChatMultipleRealtime.Server.data.migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.ToTable("User", (string)null);
                 });
 
             modelBuilder.Entity("ChatMultipleRealtime.Server.Data.Entities.Message", b =>

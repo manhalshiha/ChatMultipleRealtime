@@ -32,6 +32,8 @@ Highlights and main ideas:
 06:04:00 select user to begin chat with him
 06:21:00 close conversation with any user then remove it from chatsList 
 06:30:00 create form to write message and send it 
-06:37:30 Send message to sepecification user 
+06:37:30 Send message to specific user 
 07:27:00 creating history for every conversation 
+07:53:00 when send message and sender is not exist in chats list then must adding to chats list 
+08:02:00 creating new api to get users they have chat with current user (UserId) , it contains important query .
 
