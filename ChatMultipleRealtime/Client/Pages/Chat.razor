@@ -4,10 +4,11 @@
 
 @implements IAsyncDisposable
 @using Microsoft.AspNetCore.SignalR.Client
+@using System.IdentityModel.Tokens.Jwt
 @inject IJSRuntime jsRuntim
 @inject NavigationManager navigationManger
 <div class="container-fluid">
-    <div class="card br-0 mt-5">
+    <div class="card br-0 mt-1">
         <div class="card-header bg-main br-0 text-white">
             <div class="row">
                 <div class="col">
@@ -23,17 +24,17 @@
             <div class="row" style="flex:1;">
 
                 <div class="col-sm-2 col-3">
-                    <ChatsList Chats="Chats" OnUserSelected="OnUserSelected" />
+                    <ChatsList Loading="_loadingUsers" Chats="Chats" OnUserSelected="OnUserSelected" />
                 </div>
-                
+
                 @* <div class="col-sm-8 col-6 d-flex justify-content-center align-items-center" style="background-color:#f4ecff"> *@
-                <div class="col-sm-8 col-6 d-flex px-0" style="background-color:#f4ecff">
-                    <ChatDetails OnCancel="HandleChatDetailsCancel" 
-                        NewIncomingMessage="@newIncomingMessage" 
-                        OnIncomingMessageRecived="()=>newIncomingMessage=null"
-                        SelectedUser="SelectedUser" />
+                <div class="col-sm-8 col-6 d-flex px-0">
+                    <ChatDetails OnCancel="HandleChatDetailsCancel"
+                                 NewIncomingMessage="@newIncomingMessage"
+                                 OnIncomingMessageRecived="()=>newIncomingMessage=null"
+                                 SelectedUser="SelectedUser" />
                 </div>
-                
+
                 <div class="col-sm-2 col-3">
                     <UsersList Loading="_loadingUsers" Users="Users" OnUserSelected="OnUserSelected" />
                 </div>
@@ -51,8 +52,19 @@
     private MessageDto newIncomingMessage = null;
     public ICollection<UserDto> Users { get; set; } = new HashSet<UserDto>();
     public IList<UserDto> Chats { get; set; } = new List<UserDto>();
+    private async Task<bool> IsTokenExpiredAsync()
+    {
+        var jwt = new JwtSecurityToken(AuthenticationState.Token);
+        if (jwt.ValidTo <= DateTime.Now)
+        {
+            await HandleClikLogout();
+            return true;
+        }
+        return false;
+    }
     protected override async void OnInitialized()
     {
+        //
         base.OnInitialized();
 
         if (!AuthenticationState.IsAuthenticated)
@@ -62,25 +74,28 @@
         }
         else
         {
-            hubConnection = ConfigureHubConnection();
-            _loadingUsers = true;
-            var userListTask = GetClient().GetFromJsonAsync<ICollection<UserDto>>("api/users", JsonConverter.JsonSerializerOptions);
-            var chatListTask = GetClient().GetFromJsonAsync<IList<UserDto>>("api/users/chats", JsonConverter.JsonSerializerOptions);
-            await hubConnection.StartAsync();
-            var ChatsList = await chatListTask;
-            if (ChatsList is not null)
+            if (!await IsTokenExpiredAsync())
             {
-                Chats = ChatsList;
+                hubConnection = ConfigureHubConnection();
+                _loadingUsers = true;
+                var userListTask = GetClient().GetFromJsonAsync<ICollection<UserDto>>("api/users", JsonConverter.JsonSerializerOptions);
+                var chatListTask = GetClient().GetFromJsonAsync<IList<UserDto>>("api/users/chats", JsonConverter.JsonSerializerOptions);
+                await hubConnection.StartAsync();
+                var ChatsList = await chatListTask;
+                if (ChatsList is not null)
+                {
+                    Chats = ChatsList;
+                }
+                var UsersList = await userListTask;
+                if (UsersList is not null)
+                {
+                    Users = UsersList;
+                }
+                _loadingUsers = false;
+
+                await hubConnection.SendAsync(nameof(IBlazingChatHubServer.SetUserOnline), AuthenticationState.User);
+                StateHasChanged();
             }
-            var UsersList = await userListTask;
-            if (UsersList is not null)
-            {
-                Users = UsersList;
-            }
-            _loadingUsers = false;
-            StateHasChanged();
-            await hubConnection.SendAsync(nameof(IBlazingChatHubServer.SetUserOnline), AuthenticationState.User);
-            StateHasChanged();
         }
     }
     private HttpClient GetClient()
@@ -94,13 +109,13 @@
         var selectedChatUser = Chats.FirstOrDefault(c => c.IsSelected);
         if (selectedChatUser is not null)
         {
-            selectedChatUser.IsSelected = false; 
+            selectedChatUser.IsSelected = false;
         }
         var chatUser = Chats.FirstOrDefault((c => c.Id == user.Id));
         if (chatUser is null)
         {
             user.IsSelected = true;
-            Chats.Add(user); 
+            Chats.Add(user);
         }
         else
         {
@@ -147,19 +162,20 @@
                 StateHasChanged();
             }
         });
-        hubConnection.On<int, string>(nameof(IBlazingChatHubClient.MessageRecived), (fromUserId, message) =>
+        hubConnection.On<MessageDto>(nameof(IBlazingChatHubClient.MessageRecived), (messageDto) =>
         {
-            var fromUser = Users.FirstOrDefault(u => u.Id == fromUserId);
-            if (!Chats.Any(c => c.Id == fromUserId)){
-                Chats.Insert(0,fromUser!);
-                
+            var fromUser = Users.FirstOrDefault(u => u.Id == messageDto.FromUserId);
+            if (!Chats.Any(c => c.Id == messageDto.FromUserId))
+            {
+                Chats.Insert(0, fromUser!);
+
             }
             else
             {
-                if (SelectedUser?.Id == fromUserId)
+                if (SelectedUser?.Id == messageDto.FromUserId)
                 {
-                    newIncomingMessage = new MessageDto(SelectedUser.Id, fromUserId, message);
-                    
+                    newIncomingMessage = messageDto;
+
                 }
             }
             StateHasChanged();

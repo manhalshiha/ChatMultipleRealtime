@@ -36,4 +36,7 @@ Highlights and main ideas:
 07:27:00 creating history for every conversation 
 07:53:00 when send message and sender is not exist in chats list then must adding to chats list 
 08:02:00 creating new api to get users they have chat with current user (UserId) , it contains important query .
+08:18:44 edit and update the design of chatdetails . 
+08:59:00 verify about expired of token by (System.IdentityModel.Tokens.Jwt) library and navigate to login page and clear localstorage by execute logout methode .
+09:14:28 scrollin chat to the last message by java script .
 

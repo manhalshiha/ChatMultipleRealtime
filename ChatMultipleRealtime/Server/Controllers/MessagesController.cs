@@ -30,13 +30,15 @@ namespace ChatMultipleRealtime.Server.Controllers
             {
                 FromId = UserId,
                 ToId=messageDto.ToUserId,
-                Contetn=messageDto.Message,
+                Content=messageDto.Message,
                 SentOn=DateTime.Now
             };
+
             await chatContext.Messages.AddAsync(message,cancellationToken);
             if(await chatContext.SaveChangesAsync(cancellationToken) > 0)
             {
-                await hubContext.Clients.User(messageDto.ToUserId.ToString()).MessageRecived(base.UserId, messageDto.Message);
+                var responseMessageDto = new MessageDto(message.ToId,message.FromId,message.Content,message.SentOn);
+                await hubContext.Clients.User(messageDto.ToUserId.ToString()).MessageRecived(responseMessageDto);
                 return Ok();
             }
             else
@@ -53,7 +55,7 @@ namespace ChatMultipleRealtime.Server.Controllers
                                 (m.FromId==otherUserId&&m.ToId==UserId)
                                 ||(m.ToId==otherUserId&&m.FromId==UserId)
                                 )
-                            .Select(m=>new MessageDto(m.ToId,m.FromId,m.Contetn))
+                            .Select(m=>new MessageDto(m.ToId,m.FromId,m.Content,m.SentOn))
                             .ToListAsync(cancellationToken);  
             return messages;
         }

@@ -12,6 +12,6 @@ namespace ChatMultipleRealtime.Shared
        Task UserConnected(UserDto user);
        Task OnlineUsersList(IEnumerable<UserDto> users);
        Task UserIsOnline(int userId);
-       Task MessageRecived(int fromUserId, string message);
+       Task MessageRecived(MessageDto messageDto);
     }
 }
